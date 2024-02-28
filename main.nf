@@ -345,10 +345,42 @@ process wRep_diff {
   
 }
 
+process upload_paths {
+  stageInMode 'symlink'
+  stageOutMode 'move'
+
+  script:
+  """
+    rm -rf upload.txt
+
+    cd ${params.project_folder}/irdiff_out
+
+    for f in \$(ls *) ; do echo "irdiff \$(readlink -f \${f})" >>  upload.txt_ ; done
+
+    uniq upload.txt_ upload.txt 
+    rm upload.txt_
+    
+    cd ${params.project_folder}/irquant_out
+
+    for d in */ ; do  
+      echo \${d%/}
+      tar --exclude=\${d%/}/Unsorted.bam -cvzf \${d%/}.tar.gz \$d*
+      echo "irquant_\${d%/} \$(readlink -f  \${d%/}.tar.gz)" >> upload.txt_
+    done
+
+    uniq upload.txt_ upload.txt 
+    rm upload.txt_
+  """
+}
 
 workflow images {
   main:
     get_images()
+}
+
+workflow upload {
+  main:
+    upload_paths()
 }
 
 workflow repo_IRFinder {
