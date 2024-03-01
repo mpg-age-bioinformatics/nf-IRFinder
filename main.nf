@@ -390,7 +390,7 @@ workflow repo_IRFinder {
 
 workflow run_small_intron_calc {
   main:
-    small_int_script( params.small_intron_calc )
+    small_int_script( ${params.small_intron_calc} )
 }
 
 workflow run_build_ref {
