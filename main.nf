@@ -99,6 +99,9 @@ process build_ref {
   stageInMode 'symlink'
   stageOutMode 'move'
 
+  when:
+    ( ! file("${params.project_folder}/REF/transcripts.gtf").exists() )
+
   script:
     """
     mkdir -p "${params.project_folder}/REF"
@@ -106,7 +109,7 @@ process build_ref {
     ln -s ${params.genomes}${params.organism}/${params.release}/${params.organism}.${params.release}.fa genome.fa
     ln -s ${params.genomes}${params.organism}/${params.release}/${params.organism}.${params.release}.gtf transcripts.gtf
 
-    /workdir/IRFinder-1.3.1/bin/IRFinder -m BuildRefProcess -r "${params.project_folder}/REF"
+    /workdir/IRFinder-1.3.1/bin/IRFinder -m BuildRefProcess -r ${params.project_folder}/REF
     """
 }
 
@@ -133,7 +136,7 @@ process quantify_ir {
     #cd "${params.IRquant_raw_data}"
     cd "${params.project_folder}raw_data/"
 
-    /workdir/IRFinder-1.3.1/bin/IRFinder -r "${params.project_folder}/REF" -d ${params.project_folder}irquant_out/${pair_id} ${pair_id}.READ_1.fastq.gz
+    /workdir/IRFinder-1.3.1/bin/IRFinder -r ${params.project_folder}/REF -d ${params.project_folder}irquant_out/${pair_id} ${pair_id}.READ_1.fastq.gz
     """
   }
   else {
@@ -141,7 +144,7 @@ process quantify_ir {
     mkdir -p "${params.project_folder}irquant_out"
     cd "${params.project_folder}raw_data/"
 
-    /workdir/IRFinder-1.3.1/bin/IRFinder -r "${params.project_folder}/REF" -d ${params.project_folder}irquant_out/${pair_id} ${pair_id}.READ_1.fastq.gz ${pair_id}.READ_2.fastq.gz
+    /workdir/IRFinder-1.3.1/bin/IRFinder -r ${params.project_folder}/REF -d ${params.project_folder}irquant_out/${pair_id} ${pair_id}.READ_1.fastq.gz ${pair_id}.READ_2.fastq.gz
     """
   }
 }
@@ -151,7 +154,7 @@ process make_comps {
   stageOutMode 'move'
 
   when:
-    ( ! file("${params.scripts}group_comparison.txt").exists() ) 
+    ( ! file("${params.scripts}/group_comparison.txt").exists() ) 
   
   script:
     """
@@ -159,7 +162,7 @@ process make_comps {
 import pandas as pd
 import os
 
-samplestable = pd.read_excel("${params.scripts}sample_sheet.xlsx")
+samplestable = pd.read_excel("${params.scripts}/sample_sheet.xlsx")
 
 ir_folder="${params.project_folder}/irquant_out"
 ir_diff="${params.project_folder}/irdiff_out"
@@ -176,7 +179,7 @@ REP3 = samplestable[samplestable["group"].isin(replicates.index[replicates >= 3]
 ##### run as for line in file:
 ##### bin/analysisWithNoReplicates.pl per line
 
-O = open("${params.scripts}noreplicates.txt", "w")
+O = open("${params.scripts}/noreplicates.txt", "w")
 if REP1.shape[0] >= 2:
     # write out all pairwise comparisons
     for i, sample_i in REP1.iterrows():
@@ -197,7 +200,7 @@ O.close()
 #### run as for line in file:
 #### bin/analysisWithNoReplicates.pl per line
 
-O = open("${params.scripts}noreplicates.txt", "a")
+O = open("${params.scripts}/noreplicates.txt", "a")
 if REP2.shape[0] >= 2:
     # write out all pairwise comparisons
     for i, sample_i in REP2.iterrows():
@@ -217,7 +220,7 @@ O.close()
 # submit one run per line in group_comparisons.txt file
 
 groups = replicates.index[replicates >= 3]
-comparisons = open("${params.scripts}group_comparison.txt", "w")
+comparisons = open("${params.scripts}/group_comparison.txt", "w")
 for i, g1 in enumerate(groups):
     for j, g2 in enumerate(groups):
         if i < j:
@@ -400,14 +403,14 @@ workflow run_build_ref {
 
 workflow run_quantify_ir {
   main:
-    read_files=Channel.fromFilePairs( "${params.project_folder}raw_data/*.READ_{1,2}.fastq.gz", size: -1 )
+    read_files=Channel.fromFilePairs( "${params.project_folder}/raw_data/*.READ_{1,2}.fastq.gz", size: -1 )
     quantify_ir( read_files )
     
 }
 
 workflow run_make_comps {
 
-  if ( ! file("${params.project_folder}irdiff_out").isDirectory() ) {
+  if ( ! file("${params.project_folder}/irdiff_out").isDirectory() ) {
     file("${params.project_folder}irdiff_out").mkdirs()
   }
 
