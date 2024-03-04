@@ -132,19 +132,18 @@ process quantify_ir {
 
   if ( single ) {
     """
-    mkdir -p "${params.project_folder}irquant_out"
-    #cd "${params.IRquant_raw_data}"
-    cd "${params.project_folder}raw_data/"
+    mkdir -p "${params.project_folder}/irquant_out"
+    cd "${params.project_folder}/raw_data/"
 
-    /workdir/IRFinder-1.3.1/bin/IRFinder -r ${params.project_folder}/REF -d ${params.project_folder}irquant_out/${pair_id} ${pair_id}.READ_1.fastq.gz
+    /workdir/IRFinder-1.3.1/bin/IRFinder -r ${params.project_folder}/REF -d ${params.project_folder}/irquant_out/${pair_id} ${pair_id}.READ_1.fastq.gz
     """
   }
   else {
     """
-    mkdir -p "${params.project_folder}irquant_out"
-    cd "${params.project_folder}raw_data/"
+    mkdir -p "${params.project_folder}/irquant_out"
+    cd "${params.project_folder}/raw_data/"
 
-    /workdir/IRFinder-1.3.1/bin/IRFinder -r ${params.project_folder}/REF -d ${params.project_folder}irquant_out/${pair_id} ${pair_id}.READ_1.fastq.gz ${pair_id}.READ_2.fastq.gz
+    /workdir/IRFinder-1.3.1/bin/IRFinder -r ${params.project_folder}/REF -d ${params.project_folder}/irquant_out/${pair_id} ${pair_id}.READ_1.fastq.gz ${pair_id}.READ_2.fastq.gz
     """
   }
 }
@@ -277,7 +276,7 @@ process wRep_diff {
     val comp
 
   when:
-    ( ! file("${params.project_folder}tmp/${comp}.Rdata").exists() ) 
+    ( ! file("${params.project_folder}/tmp/${comp}.Rdata").exists() ) 
 
   script:
   """
@@ -411,7 +410,7 @@ workflow run_quantify_ir {
 workflow run_make_comps {
 
   if ( ! file("${params.project_folder}/irdiff_out").isDirectory() ) {
-    file("${params.project_folder}irdiff_out").mkdirs()
+    file("${params.project_folder}/irdiff_out").mkdirs()
   }
 
   make_comps()
@@ -423,8 +422,8 @@ workflow run_noRep_diff {
 }
 
 workflow run_wRep_diff {
-  if ( ! file("${params.project_folder}tmp").isDirectory() ) {
-    file("${params.project_folder}tmp").mkdirs()
+  if ( ! file("${params.project_folder}/tmp").isDirectory() ) {
+    file("${params.project_folder}/tmp").mkdirs()
   }
 
   comps=Channel.fromPath("${params.scripts}/group_comparison.txt").splitText().map { it.trim() }
